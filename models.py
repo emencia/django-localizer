@@ -8,7 +8,7 @@ from django.db.models import CharField, TextField
 class Message(Model):
 
     msgid = TextField()
-    msgstr = TextField()
+    msgstr = TextField(blank=True)
     language = CharField(max_length=20)
 
     class Meta:
