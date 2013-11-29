@@ -14,30 +14,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Import from Django
-from django.conf.urls import patterns
-from django.contrib import admin
-from django.contrib.admin import ModelAdmin
+from django.http import HttpResponseRedirect
+from django.views.generic import TemplateView
 
 # Import from Django-Localizer
 from models import Message
-from views import RemoveEmpty
 
 
-class MessageAdmin(ModelAdmin):
-    fields = ('msgid', 'language', 'msgstr')
-    readonly_fields = ('msgid', 'language')
 
-    list_display = ('msgid', 'language', 'msgstr')
-    list_filter = ('language',)
-    search_fields = ('msgid', 'msgstr')
+class RemoveEmpty(TemplateView):
+    template_name = 'localizer/message/remove_empty.html'
 
-    change_list_template = 'localizer/message/change_list.html'
-
-    def get_urls(self):
-        urls = super(MessageAdmin, self).get_urls()
-        remove_empty_view = RemoveEmpty.as_view()
-        urls = urls + patterns('', (r'^remove_empty$', remove_empty_view))
-        return urls
-
-
-admin.site.register(Message, MessageAdmin)
+    def post(self, request, *args, **kw):
+        Message.objects.filter(msgstr=u'').delete()
+        return HttpResponseRedirect('.')
