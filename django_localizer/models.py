@@ -15,14 +15,22 @@
 
 # Import
 from django.db.models import Model
-from django.db.models import CharField, TextField
+from django.db.models import BooleanField, CharField, TextField
+from django.utils.translation import ugettext_lazy as _
 
+
+modified_help = _(
+    u'This field is automatically set to True when the translation is '
+    u'modified through the admin interface.')
 
 class Message(Model):
 
     msgid = TextField()
     msgstr = TextField(blank=True)
     language = CharField(max_length=20)
+
+    # If True, this entry has been modified through the admin interface
+    modified = BooleanField(default=False, help_text=modified_help)
 
     class Meta:
         unique_together = ('msgid', 'language')

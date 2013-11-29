@@ -36,14 +36,13 @@ def do_translate(msgid, translation_function):
         message = Message.objects.get(msgid=msgid, language=language)
     except Message.DoesNotExist:
         # Miss
-        message = Message(msgid=msgid, language=language)
+        msgstr = do_translate_old(msgid, translation_function)
+        message = Message(msgid=msgid, msgstr=msgstr, language=language)
         message.save()
-        msgstr = None
-    else:
-        # Hit
-        msgstr = message.msgstr
+        return msgstr
 
-    # Default
+    # Hit
+    msgstr = message.msgstr
     if not msgstr:
         return do_translate_old(msgid, translation_function)
 

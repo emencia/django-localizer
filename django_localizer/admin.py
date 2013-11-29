@@ -17,20 +17,34 @@
 from django.conf.urls import patterns
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
+from django.forms import ModelForm
 
 # Import from Django-Localizer
 from models import Message
 from views import RemoveEmpty
 
 
-class MessageAdmin(ModelAdmin):
-    fields = ('msgid', 'language', 'msgstr')
-    readonly_fields = ('msgid', 'language')
+class MessageForm(ModelForm):
 
-    list_display = ('msgid', 'language', 'msgstr')
-    list_filter = ('language',)
+    def save(self, commit=True):
+        self.instance.modified = True
+        return super(MessageForm, self).save(commit)
+
+
+
+class MessageAdmin(ModelAdmin):
+
+    # Table display
+    list_display = ('msgid', 'language', 'msgstr', 'modified')
+    list_filter = ('language', 'modified')
     search_fields = ('msgid', 'msgstr')
 
+    # Edit form
+    fields = ('msgid', 'language', 'msgstr', 'modified')
+    readonly_fields = ('msgid', 'language', 'modified')
+    form = MessageForm
+
+    # Tools
     change_list_template = 'localizer/message/change_list.html'
 
     def get_urls(self):
