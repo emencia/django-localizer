@@ -19,6 +19,6 @@ from distutils.core import setup
 setup(
     name='django-localizer',
     version='0.1',
-    packages=['django_localizer'],
+    packages=['localizer'],
     license='LGPLv3+',
 )
