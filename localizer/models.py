@@ -13,24 +13,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Import
+# Import from Django
 from django.db.models import Model
-from django.db.models import BooleanField, CharField, TextField
+from django.db.models import CharField, TextField
 from django.utils.translation import ugettext_lazy as _
 
 
-modified_help = _(
-    u'This field is automatically set to True when the translation is '
-    u'modified through the admin interface.')
-
 class Message(Model):
 
-    msgid = TextField()
-    msgstr = TextField(blank=True)
-    language = CharField(max_length=20)
+    msgid       = TextField()
+    language    = CharField(max_length=20)
+    msgstr      = TextField(help_text=_(
+        u'This is the translation as found in the PO file from the source'
+        u' code.'))
 
-    # If True, this entry has been modified through the admin interface
-    modified = BooleanField(default=False, help_text=modified_help)
+    # The user filled translation
+    translation = TextField(blank=True)
 
     class Meta:
         unique_together = ('msgid', 'language')

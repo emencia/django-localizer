@@ -50,11 +50,11 @@ def do_translate(msgid, translation_function):
         return msgstr
 
     # Hit
-    msgstr = message.msgstr
-    if not msgstr:
+    translation = message.translation
+    if not translation:
         return do_translate_old(msgid, translation_function)
 
-    return mark_safe(msgstr) if is_safe else msgstr
+    return mark_safe(translation) if is_safe else translation
 
 
 trans_real.do_translate = do_translate

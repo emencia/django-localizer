@@ -26,5 +26,5 @@ class RemoveEmpty(TemplateView):
     template_name = 'localizer/message/remove_empty.html'
 
     def post(self, request, *args, **kw):
-        Message.objects.filter(msgstr=u'').delete()
+        Message.objects.filter(translation=u'').delete()
         return HttpResponseRedirect('.')

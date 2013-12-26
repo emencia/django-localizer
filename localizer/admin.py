@@ -24,25 +24,16 @@ from models import Message
 from views import RemoveEmpty
 
 
-class MessageForm(ModelForm):
-
-    def save(self, commit=True):
-        self.instance.modified = True
-        return super(MessageForm, self).save(commit)
-
-
-
 class MessageAdmin(ModelAdmin):
 
     # Table display
-    list_display = ('msgid', 'language', 'msgstr', 'modified')
-    list_filter = ('language', 'modified')
+    list_display = ('msgid', 'language', 'msgstr', 'translation')
+    list_filter = ('language',)
     search_fields = ('msgid', 'msgstr')
 
     # Edit form
-    fields = ('msgid', 'language', 'msgstr', 'modified')
-    readonly_fields = ('msgid', 'language', 'modified')
-    form = MessageForm
+    fields = ('msgid', 'language', 'msgstr', 'translation')
+    readonly_fields = ('msgid', 'language', 'msgstr')
 
     # Tools
     change_list_template = 'localizer/message/change_list.html'
