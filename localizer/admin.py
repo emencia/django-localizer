@@ -16,19 +16,37 @@
 # Import from Django
 from django.conf.urls import patterns
 from django.contrib import admin
-from django.contrib.admin import ModelAdmin
+from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.forms import ModelForm
+from django.utils.translation import ugettext_lazy as _
 
 # Import from Django-Localizer
 from models import Message
 from views import RemoveEmpty
 
 
+class TranslatedFilter(SimpleListFilter):
+
+    title = _('Translated')
+    parameter_name = 'translated'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('translated', _('Translated')),
+            ('not-translated', _('Not yet translated'))]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'translated':
+            return queryset.exclude(translation='')
+        if self.value() == 'not-translated':
+            return queryset.filter(translation='')
+
+
 class MessageAdmin(ModelAdmin):
 
     # Table display
     list_display = ('msgid', 'language', 'msgstr', 'translation')
-    list_filter = ('language',)
+    list_filter = ['language', TranslatedFilter]
     search_fields = ('msgid', 'msgstr')
 
     # Edit form
