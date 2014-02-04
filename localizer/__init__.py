@@ -17,7 +17,7 @@
 from __future__ import unicode_literals
 
 # Import from Django
-from django.db import DatabaseError
+from django.db import connection
 from django.utils.safestring import mark_safe, SafeData
 from django.utils.translation import trans_real
 
@@ -35,10 +35,6 @@ def do_translate(msgid, translation_function):
     msgid = msgid.replace(str('\r\n'), str('\n')).replace(str('\r'), str('\n'))
     try:
         message = Message.objects.get(msgid=msgid, language=language)
-    except DatabaseError:
-        # This happens with "python manage.py syncdb" when the localizer table
-        # does not yet exist
-        return do_translate_old(msgid, translation_function)
     except Message.DoesNotExist:
         # Miss
         msgstr = do_translate_old(msgid, translation_function)
@@ -54,4 +50,7 @@ def do_translate(msgid, translation_function):
     return mark_safe(translation) if is_safe else translation
 
 
-trans_real.do_translate = do_translate
+# Enable translation only if the tables are there
+# (otherwise syncdb fails)
+if 'localizer_message' in connection.introspection.table_names():
+    trans_real.do_translate = do_translate
