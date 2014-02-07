@@ -17,12 +17,11 @@
 from django.conf.urls import patterns
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
-from django.forms import ModelForm
 from django.utils.translation import ugettext_lazy as _
 
 # Import from Django-Localizer
 from models import Message
-from views import RemoveEmpty
+from views import AddLanguage, RemoveEmpty
 
 
 class TranslatedFilter(SimpleListFilter):
@@ -58,8 +57,9 @@ class MessageAdmin(ModelAdmin):
 
     def get_urls(self):
         urls = super(MessageAdmin, self).get_urls()
-        remove_empty_view = RemoveEmpty.as_view()
-        urls = urls + patterns('', (r'^remove_empty$', remove_empty_view))
+        urls = urls + patterns('',
+            (r'^add_language$', AddLanguage.as_view()),
+            (r'^remove_empty$', RemoveEmpty.as_view()))
         return urls
 
 

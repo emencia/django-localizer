@@ -15,6 +15,7 @@
 
 # Import from Django
 from django.http import HttpResponseRedirect
+from django.utils.translation import activate, ugettext
 from django.views.generic import TemplateView
 
 # Import from Django-Localizer
@@ -27,4 +28,19 @@ class RemoveEmpty(TemplateView):
 
     def post(self, request, *args, **kw):
         Message.objects.filter(translation=u'').delete()
+        return HttpResponseRedirect('.')
+
+
+class AddLanguage(TemplateView):
+    template_name = 'localizer/message/add_language.html'
+
+    def post(self, request, *args, **kw):
+        language = request.POST['language']
+        activate(language)
+
+        msgids = Message.objects.values_list('msgid', flat=True).distinct()
+        missing = set(msgids) - set(msgids.filter(language=language))
+        for msgid in missing:
+            ugettext(msgid)
+
         return HttpResponseRedirect('.')
