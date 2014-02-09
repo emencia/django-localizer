@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<p style="max-width: 40em">
+This action syncrhonizes the database with the messages from the source code.
+</p>
+
+<p style="max-width: 40em">
+It will remove empty messages not anymore in the source code. And add empty
+messages from the source code as needed.
+</p>
+
+<form action="sync_messages" method="post">
+  {% csrf_token %}
+  <input type="submit" value="Yes, synchronize database with source code">
+</form>
+{% endblock %}

@@ -14,8 +14,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Import from Django
+from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.utils.translation import activate, ugettext
+from django.utils.translation import activate
+from django.utils.translation import trans_real
 from django.views.generic import TemplateView
 
 # Import from Django-Localizer
@@ -23,24 +25,41 @@ from models import Message
 
 
 
-class RemoveEmpty(TemplateView):
-    template_name = 'localizer/message/remove_empty.html'
+class SyncMessages(TemplateView):
+    template_name = 'localizer/message/sync_messages.html'
 
     def post(self, request, *args, **kw):
+        from . import do_translate_old
+
+        # Make a list with all the message ids in the source code
+        keys = set()
+        for catalog in trans_real._translations.values():
+            for key in catalog._catalog.keys():
+                if type(key) is unicode:
+                    keys.add(key)
+                elif type(key) is tuple:
+                    pass # Plural forms not yet supported
+                else:
+                    raise TypeError, repr(key)
+
+        # Remove empty messages
         Message.objects.filter(translation=u'').delete()
-        return HttpResponseRedirect('.')
 
+        # Make a list with all the messages missing in the database
+        messages = []
+        for language, title in settings.LANGUAGES:
+            activate(language)
+            for key in keys:
+                try:
+                    Message.objects.get(msgid=key, language=language)
+                except Message.DoesNotExist:
+                    msgstr = do_translate_old(key, 'ugettext')
+                    message = Message(msgid=key, msgstr=msgstr,
+                                      language=language)
+                    messages.append(message)
 
-class AddLanguage(TemplateView):
-    template_name = 'localizer/message/add_language.html'
+        # Bulk create the messages
+        Message.objects.bulk_create(messages)
 
-    def post(self, request, *args, **kw):
-        language = request.POST['language']
-        activate(language)
-
-        msgids = Message.objects.values_list('msgid', flat=True).distinct()
-        missing = set(msgids) - set(msgids.filter(language=language))
-        for msgid in missing:
-            ugettext(msgid)
-
+        # Ok, go back
         return HttpResponseRedirect('.')

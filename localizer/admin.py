@@ -21,7 +21,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # Import from Django-Localizer
 from models import Message
-from views import AddLanguage, RemoveEmpty
+from views import SyncMessages
 
 
 class TranslatedFilter(SimpleListFilter):
@@ -58,8 +58,7 @@ class MessageAdmin(ModelAdmin):
     def get_urls(self):
         urls = super(MessageAdmin, self).get_urls()
         urls = urls + patterns('',
-            (r'^add_language$', AddLanguage.as_view()),
-            (r'^remove_empty$', RemoveEmpty.as_view()))
+            (r'^sync_messages$', SyncMessages.as_view()))
         return urls
 
 
