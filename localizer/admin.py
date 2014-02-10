@@ -44,7 +44,7 @@ class TranslatedFilter(SimpleListFilter):
 class MessageAdmin(ModelAdmin):
 
     # Table display
-    list_display = ('msgid', 'language', 'msgstr', 'translation')
+    list_display = ('msgid', 'plural', 'language', 'msgstr', 'translation')
     list_filter = ['language', TranslatedFilter]
     search_fields = ('msgid', 'msgstr')
 

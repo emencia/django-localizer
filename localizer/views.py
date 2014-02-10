@@ -29,18 +29,12 @@ class SyncMessages(TemplateView):
     template_name = 'localizer/message/sync_messages.html'
 
     def post(self, request, *args, **kw):
-        from . import do_translate_old
-
-        # Make a list with all the message ids in the source code
-        keys = set()
-        for catalog in trans_real._translations.values():
-            for key in catalog._catalog.keys():
-                if type(key) is unicode:
-                    keys.add(key)
-                elif type(key) is tuple:
-                    pass # Plural forms not yet supported
-                else:
-                    raise TypeError, repr(key)
+        # Make a dict with all the messages in the source code
+        # TODO Empty messages are not in the MO files
+        source = {}
+        for language, catalog in trans_real._translations.items():
+            for key, value in catalog._catalog.items():
+                source.setdefault(key, {})[language] = value
 
         # Remove empty messages
         Message.objects.filter(translation=u'').delete()
@@ -49,13 +43,22 @@ class SyncMessages(TemplateView):
         messages = []
         for language, title in settings.LANGUAGES:
             activate(language)
-            for key in keys:
+            for key in source:
+                value = source[key].get(language, u'')
+                if type(key) is unicode:
+                    kw = {'msgid': key}
+                elif type(key) is tuple:
+                    kw = {'msgid': key[0], 'plural': key[1]}
+                else:
+                    raise TypeError, repr(key)
+
+                kw['language'] = language
+
                 try:
-                    Message.objects.get(msgid=key, language=language)
+                    message = Message.objects.get(**kw)
                 except Message.DoesNotExist:
-                    msgstr = do_translate_old(key, 'ugettext')
-                    message = Message(msgid=key, msgstr=msgstr,
-                                      language=language)
+                    kw['msgstr'] = value
+                    message = Message(**kw)
                     messages.append(message)
 
         # Bulk create the messages

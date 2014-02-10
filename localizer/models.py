@@ -15,13 +15,14 @@
 
 # Import from Django
 from django.db.models import Model
-from django.db.models import CharField, TextField
+from django.db.models import CharField, IntegerField, TextField
 from django.utils.translation import ugettext_lazy as _
 
 
 class Message(Model):
 
     msgid       = TextField()
+    plural      = IntegerField(null=True)
     language    = CharField(max_length=20)
     msgstr      = TextField(help_text=_(
         u'This is the translation as found in the PO file from the source'
@@ -31,4 +32,4 @@ class Message(Model):
     translation = TextField(blank=True)
 
     class Meta:
-        unique_together = ('msgid', 'language')
+        unique_together = ('msgid', 'plural', 'language')
