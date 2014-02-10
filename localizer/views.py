@@ -13,28 +13,58 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Import from the Standard Library
+from importlib import import_module
+from os.path import dirname, isdir, isfile, join as join_path
+
 # Import from Django
 from django.conf import settings
 from django.http import HttpResponseRedirect
-from django.utils.translation import activate
-from django.utils.translation import trans_real
 from django.views.generic import TemplateView
+
+# Import from polib
+from polib import pofile
 
 # Import from Django-Localizer
 from models import Message
 
+
+def get_paths_to_po_files():
+    paths = []
+    for appname in reversed(settings.INSTALLED_APPS):
+        app = import_module(appname)
+        path = join_path(dirname(app.__file__), 'locale')
+        paths.append(path)
+
+    for path in reversed(settings.LOCALE_PATHS):
+        paths.append(path)
+
+    return [ x + '/%s/LC_MESSAGES/django.po' for x in paths if isdir(x) ]
 
 
 class SyncMessages(TemplateView):
     template_name = 'localizer/message/sync_messages.html'
 
     def post(self, request, *args, **kw):
-        # Make a dict with all the messages in the source code
-        # TODO Empty messages are not in the MO files
+        paths = get_paths_to_po_files()
+
+        # Read the PO files
         source = {}
-        for language, catalog in trans_real._translations.items():
-            for key, value in catalog._catalog.items():
-                source.setdefault(key, {})[language] = value
+        for language, title in settings.LANGUAGES:
+            for path in paths:
+                path = path % language
+                if not isfile(path):
+                    continue
+                po = pofile(path)
+                for entry in po:
+                    msgid = entry.msgid
+                    if entry.msgstr_plural:
+                        for plural, msgstr in entry.msgstr_plural.items():
+                            key = (msgid, int(plural))
+                            source.setdefault(key, {})[language] = msgstr
+                    else:
+                        key = (msgid, None)
+                        source.setdefault(key, {})[language] = entry.msgstr
 
         # Remove empty messages
         Message.objects.filter(translation=u'').delete()
@@ -42,22 +72,14 @@ class SyncMessages(TemplateView):
         # Make a list with all the messages missing in the database
         messages = []
         for language, title in settings.LANGUAGES:
-            activate(language)
             for key in source:
-                value = source[key].get(language, u'')
-                if type(key) is unicode:
-                    kw = {'msgid': key}
-                elif type(key) is tuple:
-                    kw = {'msgid': key[0], 'plural': key[1]}
-                else:
-                    raise TypeError, repr(key)
-
-                kw['language'] = language
-
+                msgstr = source[key].get(language, u'')
+                msgid, plural = key
+                kw = {'msgid': msgid, 'plural': plural, 'language': language}
                 try:
                     message = Message.objects.get(**kw)
                 except Message.DoesNotExist:
-                    kw['msgstr'] = value
+                    kw['msgstr'] = msgstr
                     message = Message(**kw)
                     messages.append(message)
 

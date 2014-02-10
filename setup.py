@@ -14,11 +14,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Import from the Standard Library
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 setup(
     name='django-localizer',
     version='0.1',
     packages=['localizer'],
     license='LGPLv3+',
+    install_requires=['polib'],
 )
