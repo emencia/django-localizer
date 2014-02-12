@@ -46,11 +46,11 @@ class MessageAdmin(ModelAdmin):
     # Table display
     list_display = ('msgid', 'plural', 'language', 'msgstr', 'translation')
     list_filter = ['language', TranslatedFilter]
-    search_fields = ('msgid', 'msgstr')
+    search_fields = ('msgid', 'msgstr', 'translation')
 
     # Edit form
-    fields = ('msgid', 'language', 'msgstr', 'translation')
-    readonly_fields = ('msgid', 'language', 'msgstr')
+    fields = ('msgid', 'plural', 'language', 'msgstr', 'translation')
+    readonly_fields = ('msgid', 'plural', 'language', 'msgstr')
 
     # Tools
     change_list_template = 'localizer/message/change_list.html'
