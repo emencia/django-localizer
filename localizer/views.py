@@ -46,6 +46,7 @@ def delete_message(message):
     # Delete only if empty
     if message.translation:
         message.msgstr = u''
+        message.stale = True
         message.save()
     else:
         message.delete()
@@ -97,8 +98,9 @@ class SyncMessages(TemplateView):
 
             # Case 3: update
             msgstr = value.pop(message.language)
-            if msgstr != message.msgstr:
+            if message.msgstr != msgstr or message.stale is not False:
                 message.msgstr = msgstr
+                message.stale = False
                 message.save()
 
             # Clean
