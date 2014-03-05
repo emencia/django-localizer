@@ -42,15 +42,25 @@ def get_paths_to_po_files():
     return [ x + '/%s/LC_MESSAGES/django.po' for x in paths if isdir(x) ]
 
 
+def delete_message(message):
+    # Delete only if empty
+    if message.translation:
+        message.msgstr = u''
+        message.save()
+    else:
+        message.delete()
+
+
 class SyncMessages(TemplateView):
     template_name = 'localizer/message/sync_messages.html'
 
     def post(self, request, *args, **kw):
         paths = get_paths_to_po_files()
+        languages = [ x[0] for x in settings.LANGUAGES ]
 
         # Read the PO files
         source = {}
-        for language, title in settings.LANGUAGES:
+        for language in languages:
             for path in paths:
                 path = path % language
                 if not isfile(path):
@@ -66,22 +76,43 @@ class SyncMessages(TemplateView):
                         key = (msgid, None)
                         source.setdefault(key, {})[language] = entry.msgstr
 
-        # Remove empty messages
-        Message.objects.filter(translation=u'').delete()
+        # Fill source for missing translations, so it is complete
+        for value in source.values():
+            for language in languages:
+                value.setdefault(language, u'')
+
+        # Delete or update
+        for message in Message.objects.all():
+            # Case 1: language not supported anymore
+            if message.language not in languages:
+                delete_message(message)
+                continue
+
+            # Case 2: message not in the source anymore
+            key = (message.msgid, message.plural)
+            value = source.get(key)
+            if value is None:
+                delete_message(message)
+                continue
+
+            # Case 3: update
+            msgstr = value.pop(message.language)
+            if msgstr != message.msgstr:
+                message.msgstr = msgstr
+                message.save()
+
+            # Clean
+            if not value:
+                del source[key]
 
         # Make a list with all the messages missing in the database
         messages = []
-        for language, title in settings.LANGUAGES:
-            for key in source:
-                msgstr = source[key].get(language, u'')
-                msgid, plural = key
-                kw = {'msgid': msgid, 'plural': plural, 'language': language}
-                try:
-                    message = Message.objects.get(**kw)
-                except Message.DoesNotExist:
-                    kw['msgstr'] = msgstr
-                    message = Message(**kw)
-                    messages.append(message)
+        for key, value in source.items():
+            msgid, plural = key
+            for language, msgstr in value.items():
+                message = Message(msgid=msgid, plural=plural,
+                                  language=language, msgstr=msgstr)
+                messages.append(message)
 
         # Bulk create the messages
         Message.objects.bulk_create(messages)
