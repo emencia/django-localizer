@@ -36,7 +36,7 @@ def do_translate(msgid, translation_function):
     is_safe = isinstance(msgid, SafeData)
     msgid = msgid.replace(str('\r\n'), str('\n')).replace(str('\r'), str('\n'))
 
-    kw = {'msgid': msgid, 'language': language}
+    kw = {'msgid': msgid, 'plural': None, 'language': language}
     try:
         message = Message.objects.get(**kw)
     except Message.DoesNotExist:
