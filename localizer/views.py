@@ -20,7 +20,6 @@ from os.path import basename, dirname, isdir, isfile, join as join_path
 # Import from Django
 from django import http
 from django.conf import settings
-from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.utils import six
@@ -28,8 +27,9 @@ from django.utils.text import javascript_quote
 from django.utils.translation import (check_for_language, activate, to_locale,
                                       get_language)
 
-from django.views.i18n import (LibHead, SimplePlural, LibFoot, InterPolate,
-                               LibFormatHead, get_formats, LibFormatFoot)
+from django.views.i18n import (LibHead, SimplePlural, PluralIdx,
+                               LibFoot, InterPolate, LibFormatHead,
+                               get_formats, LibFormatFoot)
 
 # Import from polib
 from polib import pofile
@@ -162,12 +162,8 @@ def javascript_catalog(request, domain='djangojs', packages=None):
         packages = packages.split('+')
     packages = [p for p in packages if p ==
                 'django.conf' or p in settings.INSTALLED_APPS]
-    default_locale = to_locale(settings.LANGUAGE_CODE)
     locale = to_locale(get_language())
-
     t = {}
-    en_selected = locale.startswith('en')
-    en_catalog_missing = True
 
     # Singular forms
     aux_catalog = Message.objects.filter(

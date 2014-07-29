@@ -22,12 +22,12 @@ from django.utils.translation import ugettext_lazy as _
 class Message(Model):
 
     # Unique
-    msgid       = TextField()
-    plural      = IntegerField(null=True)
-    language    = CharField(max_length=20)
+    msgid = TextField()
+    plural = IntegerField(null=True)
+    language = CharField(max_length=20)
 
     # Translation as found in the PO file
-    msgstr      = TextField(help_text=_(
+    msgstr = TextField(help_text=_(
         u'This is the translation as found in the PO file from the source'
         u' code.'))
 
@@ -39,7 +39,6 @@ class Message(Model):
 
     # Domain for defaults to django translations
     domain = CharField(default="django", max_length=30)
-
 
     class Meta:
         unique_together = ('msgid', 'plural', 'language', 'domain')
