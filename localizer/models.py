@@ -37,5 +37,9 @@ class Message(Model):
     # The user filled translation
     translation = TextField(blank=True)
 
+    # Domain for defaults to django translations
+    domain = CharField(default="django", max_length=30)
+
+
     class Meta:
-        unique_together = ('msgid', 'plural', 'language')
+        unique_together = ('msgid', 'plural', 'language', 'domain')

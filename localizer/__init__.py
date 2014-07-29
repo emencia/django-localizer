@@ -36,7 +36,8 @@ def do_translate(msgid, translation_function):
     is_safe = isinstance(msgid, SafeData)
     msgid = msgid.replace(str('\r\n'), str('\n')).replace(str('\r'), str('\n'))
 
-    kw = {'msgid': msgid, 'plural': None, 'language': language}
+    kw = {'msgid': msgid, 'plural': None, 'language': language,
+            'domain': 'django'}
     try:
         message = Message.objects.get(**kw)
     except Message.DoesNotExist:
@@ -61,7 +62,8 @@ def do_ntranslate(singular, plural, number, translation_function):
     translation = trans_real.translation(language)
     number = translation.plural(number)
 
-    kw = {'msgid': singular, 'plural': number, 'language': language}
+    kw = {'msgid': singular, 'plural': number, 'language': language,
+            'domain': 'django'}
     try:
         message = Message.objects.get(**kw)
     except Message.DoesNotExist:
